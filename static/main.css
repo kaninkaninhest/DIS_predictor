@@ -1,0 +1,43 @@
+:root {
+    --transbg: rgb(32, 32, 32);
+}
+
+nav {
+    color: white;
+    text-decoration: none;
+}
+
+h1 {
+    font-family:monospace;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    margin: auto;
+    font-family: sans-serif;
+    color: black;
+    background-color: var(--transbg);
+}
+
+.pseudo_body {
+    background-color: rgb(254, 249, 186);
+}
+
+.divtab {
+    display: flex;
+    justify-content: center;
+    font-family:monospace;
+}
+
+.divtab-cell {
+    padding: 4em;
+    border-style: solid;
+    border-color: var(--transbg);
+    border-width: 0.5em;
+}
+
+.added_courses {
+    border: 0.1em dotted black;
+    padding: 0.5em;
+}

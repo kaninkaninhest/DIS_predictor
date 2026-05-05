@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>Life predictor</title>
+{% endblock %}
+
+
+
+
+{% block body %}
+
+<div class="pseudo_body">
+    <h1>Predict your grades</h1>
+
+    <div  class="divtab">
+        <div class="divtab-cell">
+        <hr>
+        <h3>Insert your finished courses</h3>
+        <form method="POST">
+            <input type="hidden" name="form_type" value="finished">
+
+            <input type="text" name="courseId" placeholder="Course ID">
+            <input type="text" name="courseGrade" placeholder="Grade">
+            <button type="submit">Add</button>
+        </form>
+
+        <hr>
+
+        {% if pseudo_courses %}
+            <h3>Submitted courses:</h3>
+            {% for p in pseudo_courses %}
+            <p class="added_courses"> <b>{{ p.cName }}</b>: {{ p.cGrade }}</p>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="divtab-cell">
+        <hr>
+        <h3>Insert courses to predict on</h3>
+        <form method="POST">
+             <input type="hidden" name="form_type" value="predict">
+
+            <input type="text" name="courseId" placeholder="Course ID">
+            <button type="submit">Add</button>
+        </form>
+
+        <hr>
+
+        {% if pred_courses %}
+            <h3>Added courses:</h3>
+            {% for p in pred_courses %}
+            <p class="added_courses"> <b>{{ p.cName }}</b></p>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+
+    <div class="divtab-cell">
+        <hr>
+        <h3>Predictions</h3>
+        <hr>
+
+        {% if pred_courses %}
+            {% for p in pred_courses %}
+            <p class="added_courses"> In <b>{{ p.cName }}</b> you will get: <b> {{ p.cGrade }} </b></p>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    </div>
+</div>
+{% endblock %}
