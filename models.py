@@ -12,7 +12,7 @@ class Course(db.Model):
     __tablename__ = "course"
     course_code = db.Column(db.String(50), primary_key=True)
     course_name = db.Column(db.String(200), nullable=False)
-    course_credits = db.Column(db.Integer, nullable=False)
+    course_credits = db.Column(db.Float, nullable=False)
 
     distributions = db.relationship("GradeDistribution", back_populates="course", cascade="all, delete-orphan")
     completions = db.relationship("Completed", back_populates="course", cascade="all, delete-orphan")

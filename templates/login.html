@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>Login</title>
+{% endblock %}
+
+
+
+
+{% block body %}
+
+<div class="pseudo_body">
+    <h1>Predict your grades</h1>
+
+    <div  class="divtab">
+        <div class="divtab-cell">
+            <hr>
+            <h3>Login</h3>
+            <form method="POST">
+                <input type="hidden" name="form_type" value="login">
+                <input type="text" name="courseId" placeholder="ku_id">
+                <button type="submit">login</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

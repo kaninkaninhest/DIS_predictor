@@ -21,5 +21,5 @@ def percentileFromGrade(cdf: list, grade: int):
     return [e for e in cdf if e==grade]
 
 def gradeFromPercentile(fCourses, pCourses):
-    mean = np.mean(grade_percentiles)
+    mean = np.mean(f_grade_percentiles)
  

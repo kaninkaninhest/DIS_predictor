@@ -1,9 +1,10 @@
-from flask import Flask, request, render_template, redirect
+from flask import Flask, request, render_template, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select, func, insert
 from flask_migrate import Migrate
 import re
 import models
+import predict
 
 
 cCodeRegExp = re.compile(r'[NL][A-Z]{3}\d{5}U\s*$', re.IGNORECASE)
@@ -24,43 +25,33 @@ db.init_app(app)
 
 migrate = Migrate(app, db)
 
+app.secret_key = "123"
 
-
-@app.route("/add_course.html", methods=['GET', 'POST'])
-def add_course():
+@app.route("/login.html", methods=['GET','POST'])
+def login():
     if request.method == "POST":
-        validAmount = re.compile(r'[0]*\d*')
         form_type = request.form.get("form_type")
-        if form_type == "finished":
-            courseCode = request.form["addCCode"]
-            courseName = request.form["addCName"]
-            if not cCodeRegExp.match(courseCode) or not courseName: 
-                return redirect("/add_course.html")
-
-            gs = []
-            for i in range(len(grade_values)):
-                val = request.form.get("addCGrade" + str(i), "")
-                if val == "":
-                    gs.append(0)
-                else:
-                    try:gs.append(int(val))
-                    except ValueError:
-                        print("Inserted value not an integer")
-                        gs.append(0)
+        if form_type == "login":
+            ku_id = request.form["ku_id"].strip()
+            if not kuIDRegExp.match(ku_id):
+                return redirect("/login.html")
 
             existing = db.session.execute(
-                select(models.Course).where(func.lower(models.Course.courseCode) == courseCode.lower())
+                select(models.Student).where(func.lower(models.Student.ku_id) == ku_id.lower())
             ).scalar_one_or_none()
 
-            if existing:
-                print("Course already present")
-                return redirect("/add_course.html")
+            if not existing:
+                s = models.Student(ku_id, None)
+                db.session.add(s)
+                db.session.commit()
+                existing = s
 
-            c = models.Course(courseName, courseCode, gs[0],gs[1], gs[2], gs[3], gs[4], gs[5], gs[6])
-            db.session.add(c)
-            db.session.commit()
+            # store logged in student in Flask session
+            session['ku_id'] = existing.ku_id
 
-    return render_template('add_course.html')
+            return redirect(url_for('index'))
+
+    return render_template("login.html")
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -97,7 +88,7 @@ def index():
                         b=True
                 if not b: 
                     pseudo_pred = PseudoCourse(pred_course.courseName, None, pred_course)
-                    pred_grade = predict_grade(pseudo_pred.course)
+                    pred_grade = predict.predict_grade(pseudo_pred.course)
                     pseudo_pred.cGrade = pred_grade
                     pred_courses.append(pseudo_pred)
         
