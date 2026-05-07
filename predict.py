@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.stats as ss
-from app import PseudoCourse
-from app import grade_values
+from app1 import PseudoCourse
+from app1 import grade_values
 
 #Percentile matching
 

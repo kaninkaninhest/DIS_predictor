@@ -2,13 +2,9 @@ from flask import Flask, request, render_template, redirect
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select, func, insert
 from flask_migrate import Migrate
-import numpy as np
-import uuid
 import re
 import models
 
-def generate_id():
-    return str(uuid.uuid4())[:6]
 
 cCodeRegExp = re.compile(r'[NL][A-Z]{3}\d{5}U\s*$', re.IGNORECASE)
 
@@ -21,13 +17,12 @@ pseudo_courses = []
 pred_courses = []
 
 app = Flask(__name__)
-
-
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:123@localhost:5432/CourseGrades_api'
 
-db = SQLAlchemy(app)
+from models import db
+db.init_app(app)
 
-migrate = Migrate(app,db)
+migrate = Migrate(app, db)
 
 
 

@@ -1,5 +1,12 @@
-from app import db, generate_id
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey, UniqueConstraint, Index
+import uuid
+
+def generate_id():
+    return str(uuid.uuid4())[:6]
+
+db = SQLAlchemy() 
+
 
 class Course(db.Model):
     __tablename__ = "course"
@@ -33,14 +40,12 @@ class Completed(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ku_id = db.Column(db.String(50), ForeignKey("student.ku_id"), nullable=False)
     course_code = db.Column(db.String(50), ForeignKey("course.course_code"), nullable=False)
-    term = db.Column(db.String(20), nullable=True)
     year = db.Column(db.Integer, nullable=True)
     grade = db.Column(db.Integer, nullable=False)
-    credits_earned = db.Column(db.Integer, nullable=True)
 
     student = db.relationship("Student", back_populates="completions")
     course = db.relationship("Course", back_populates="completions")
-    __table_args__ = (UniqueConstraint("ku_id", "course_code", "term", "year", name="uq_completed_unique"),)
+    __table_args__ = (UniqueConstraint("ku_id", "course_code", "year", name="uq_completed_unique"),)
 
 class PredictionRequest(db.Model):
     __tablename__ = "prediction_request"
