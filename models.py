@@ -1,62 +1,63 @@
-from app import db
-from app import generate_id
-from sqlalchemy import ForeignKey
-
+from app import db, generate_id
+from sqlalchemy import ForeignKey, UniqueConstraint, Index
 
 class Course(db.Model):
-    course_name = db.Column(db.String(200))
-    course_code = db.Column(db.String(200), primary_key=True)
-    course_credits = db.Column(db.Int, nullable=False)
+    __tablename__ = "course"
+    course_code = db.Column(db.String(50), primary_key=True)
+    course_name = db.Column(db.String(200), nullable=False)
+    course_credits = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, courseName, courseCode, courseCredits):
-        self.course_code = courseCode
-        self.course_name = courseName
-        self.course_credits = courseCredits
+    distributions = db.relationship("GradeDistribution", back_populates="course", cascade="all, delete-orphan")
+    completions = db.relationship("Completed", back_populates="course", cascade="all, delete-orphan")
+    predictions = db.relationship("Prediction", back_populates="course", cascade="all, delete-orphan")
 
 class Student(db.Model):
-    ku_id = db.Column(db.String(200), primary_key=True)
-    major = db.Column(db.String(200), nullable=True)
+    __tablename__ = "student"
+    ku_id = db.Column(db.String(50), primary_key=True)
+    major = db.Column(db.String(100), nullable=True)
 
-    def __init__(self, ku_id, major):
-        self.ku_id = ku_id
-        self.major = major
-        
-        
-class Has_Grade_Distribution(db.Model):
-    grade_value = db.Column(db.Int, nullable=False)
-    count = db.Column(db.Int, nullable=False)
-    year = db.Column(db.Int, nullable=False)
-    course_code = db.Column(db.String(200), ForeignKey(Course.course_code), nullable=False)
+    completions = db.relationship("Completed", back_populates="student", cascade="all, delete-orphan")
+    requests = db.relationship("PredictionRequest", back_populates="student", cascade="all, delete-orphan")
 
-    def __init__(self, gradeval, count, year, course_code):
-        self.grade_value = gradeval
-        self.count = count
-        self.year = year
-        self.course_code = course_code
-                
-class Completed(db.Model): 
-    year = db.Column(db.Int, nullable=True)
-    act_grade = db.Column(db.Int, nullable=False)
-    course_code = db.Column(db.String(200), ForeignKey(Course.course_code), nullable=False)
-    ku_id = db.Column(db.String(200), ForeignKey(Student.ku_id), nullable=False)
+class GradeDistribution(db.Model):
+    __tablename__ = "grade_distribution"
+    course_code = db.Column(db.String(50), db.ForeignKey("course.course_code"), primary_key=True)
+    grade_value = db.Column(db.Integer, primary_key=True)
+    year = db.Column(db.Integer, primary_key=True)
+    count = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, year, act_grade, ku_id, course_code):
-        self.act_grade = act_grade
-        self.ku_id = ku_id
-        self.year = year
-        self.course_code = course_code
+    course = db.relationship("Course", back_populates="distributions")
 
-class Prediction_Request(db.Model):
-    request_id = db.Column(db.String(6), primary_key=True, default=generate_id, unique=True)
+class Completed(db.Model):
+    __tablename__ = "completed"
+    id = db.Column(db.Integer, primary_key=True)
+    ku_id = db.Column(db.String(50), ForeignKey("student.ku_id"), nullable=False)
+    course_code = db.Column(db.String(50), ForeignKey("course.course_code"), nullable=False)
+    term = db.Column(db.String(20), nullable=True)
+    year = db.Column(db.Integer, nullable=True)
+    grade = db.Column(db.Integer, nullable=False)
+    credits_earned = db.Column(db.Integer, nullable=True)
 
-class Predicts(db.Model):
-    confidence_score = db.Column(db.Float, nullable=False)
-    pred_grade = db.Column(db.Int, nullable=False)
-    course_code = db.Column(db.String, ForeignKey(Prediction_Request.request_id), nullable=False)
-    request_id = db.Column(db.String, ForeignKey(Prediction_Request.request_id), nullable=False)
+    student = db.relationship("Student", back_populates="completions")
+    course = db.relationship("Course", back_populates="completions")
+    __table_args__ = (UniqueConstraint("ku_id", "course_code", "term", "year", name="uq_completed_unique"),)
 
-    def __init__(self, confidence_score, pred_grade, course_code, request_id):
-        self.confidence_score = confidence_score
-        self.pred_grade = pred_grade
-        self.course_code = course_code
-        self.request_id = request_id
+class PredictionRequest(db.Model):
+    __tablename__ = "prediction_request"
+    request_id = db.Column(db.String(12), primary_key=True, default=generate_id, unique=True)
+    student_id = db.Column(db.String(50), ForeignKey("student.ku_id"), nullable=False)
+    request_date = db.Column(db.DateTime, server_default=db.func.now())
+    student = db.relationship("Student", back_populates="requests")
+    predictions = db.relationship("Prediction", back_populates="request", cascade="all, delete-orphan")
+
+class Prediction(db.Model):
+    __tablename__ = "prediction"
+    id = db.Column(db.Integer, primary_key=True)
+    request_id = db.Column(db.String(12), ForeignKey("prediction_request.request_id"), nullable=False)
+    course_code = db.Column(db.String(50), ForeignKey("course.course_code"), nullable=False)
+    predicted_grade = db.Column(db.Integer, nullable=False)
+    confidence_score = db.Column(db.Float, nullable=True)
+
+    request = db.relationship("PredictionRequest", back_populates="predictions")
+    course = db.relationship("Course", back_populates="predictions")
+    __table_args__ = (UniqueConstraint("request_id", "course_code", name="uq_request_course"),)
