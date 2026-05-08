@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import ForeignKey, UniqueConstraint, Index
+from sqlalchemy import ForeignKey, UniqueConstraint, Index, PrimaryKeyConstraint
 import uuid
 
 def generate_id():
@@ -37,15 +37,14 @@ class GradeDistribution(db.Model):
 
 class Completed(db.Model):
     __tablename__ = "completed"
-    id = db.Column(db.Integer, primary_key=True)
-    ku_id = db.Column(db.String(50), ForeignKey("student.ku_id"), nullable=False)
-    course_code = db.Column(db.String(50), ForeignKey("course.course_code"), nullable=False)
-    year = db.Column(db.Integer, nullable=True)
+    ku_id = db.Column(db.String(50), ForeignKey("student.ku_id"), primary_key=True)
+    course_code = db.Column(db.String(50), ForeignKey("course.course_code"), primary_key=True)
+    year = db.Column(db.Integer, primary_key=True)
     grade = db.Column(db.Integer, nullable=False)
 
     student = db.relationship("Student", back_populates="completions")
     course = db.relationship("Course", back_populates="completions")
-    __table_args__ = (UniqueConstraint("ku_id", "course_code", "year", name="uq_completed_unique"),)
+
 
 class PredictionRequest(db.Model):
     __tablename__ = "prediction_request"

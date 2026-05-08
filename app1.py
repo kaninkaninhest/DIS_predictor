@@ -5,6 +5,7 @@ from flask_migrate import Migrate
 import re
 import models
 import predict
+from models import Student, Course, Completed, PredictionRequest, Prediction, GradeDistribution
 
 
 cCodeRegExp = re.compile(r'[NL][A-Z]{3}\d{5}U\s*$', re.IGNORECASE)
@@ -27,7 +28,7 @@ migrate = Migrate(app, db)
 
 app.secret_key = "123"
 
-@app.route("/login.html", methods=['GET','POST'])
+@app.route("/", methods=['GET','POST'])
 def login():
     if request.method == "POST":
         form_type = request.form.get("form_type")
@@ -36,12 +37,12 @@ def login():
             if not kuIDRegExp.match(ku_id):
                 return redirect("/login.html")
 
-            existing = db.session.execute(
-                select(models.Student).where(func.lower(models.Student.ku_id) == ku_id.lower())
-            ).scalar_one_or_none()
-
-            if not existing:
-                s = models.Student(ku_id, None)
+            existing = lookup_sid(ku_id)
+            if existing:
+                #if it exists retrieve finished courses from db
+                pseudo_courses.extend(completed2pseudo(existing.completions))
+            else:
+                s = Student(ku_id=ku_id, major=None)
                 db.session.add(s)
                 db.session.commit()
                 existing = s
@@ -54,7 +55,7 @@ def login():
     return render_template("login.html")
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/index", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
         form_type = request.form.get("form_type")
@@ -63,38 +64,51 @@ def index():
             courseGrade = request.form["courseGrade"]
             if not gradesRegExp.match(courseGrade): courseId="invalid"
 
-            course = lookup_name(courseId)
-            if course is not None: 
-                pseudo = PseudoCourse(course.courseName, courseGrade, course)
+            course = lookup_cid(courseId)
+            if course: 
+                sID = session.get('ku_id')
+                stud = lookup_sid(sID)
+                pseudo = PseudoCourse(course.course_name, courseGrade, course)
+                completed_course = Completed(ku_id=sID,
+                                   course_code=course.course_code,
+                                   year=2025,
+                                   grade=courseGrade,
+                                   student=stud,
+                                   course=course)
+                stud.completions.append(completed_course)
+                db.session.add(completed_course)
+                db.session.commit()
             else: pseudo=None
 
             if pseudo:
                 b = False
                 for e in pseudo_courses:
-                    if e.course.courseCode == pseudo.course.courseCode:
-                        b=True
+                    if e.course.course_code == pseudo.course.course_code:
+                        pseudo_courses.remove(e) #if already finished, it can be overwritten
                 for e in pred_courses: 
-                    if e.course.courseCode == pseudo.course.courseCode:
+                    if e.course.course_code == pseudo.course.course_code:
                         b=True
                 if not b: pseudo_courses.append(pseudo)
+
+
         elif form_type == "predict":
             courseId = request.form["courseId"]
 
-            pred_course = lookup_name(courseId)
+            pred_course = lookup_cid(courseId)
             if pred_course:
                 b = False
                 for e in pseudo_courses:
-                    if e.course.courseCode == pred_course.courseCode:
+                    if e.course.course_code == pred_course.course_code:
                         b=True
                 if not b: 
-                    pseudo_pred = PseudoCourse(pred_course.courseName, None, pred_course)
+                    pseudo_pred = PseudoCourse(pred_course.course_name, None, pred_course)
                     pred_grade = predict.predict_grade(pseudo_pred.course)
                     pseudo_pred.cGrade = pred_grade
                     pred_courses.append(pseudo_pred)
         
             
 
-        return redirect("/")  # reload page
+        return redirect(url_for('index'))  # reload page
 
     return render_template("index.html", pseudo_courses=pseudo_courses, pred_courses=pred_courses)
 
@@ -106,20 +120,36 @@ class PseudoCourse:
 
     def __str__(self):
         return f"{self.cName}: {self.cGrade}"
+    
+def completed2pseudo(cs: list[Completed]):
+    res = []
+    for e in cs:
+        res.append(PseudoCourse(e.course.course_name,
+                                e.grade,
+                                e.course))
+    return res
 
-def lookup_name(cId):
+def lookup_cid(cId):
     if cId is None:
         return None
 
     result = db.session.execute(
-        select(models.Course).where(func.lower(models.Course.courseCode) == cId.lower())
+        select(Course).where(func.lower(Course.course_code) == cId.lower())
     ).scalar_one_or_none()
 
     if result == None: 
         result = db.session.execute(
-        select(models.Course).where(func.lower(models.Course.courseName) == cId.lower())
+        select(Course).where(func.lower(Course.course_name) == cId.lower())
     ).scalar_one_or_none()
 
+    return result
+
+def lookup_sid(sId):
+    if sId is None:
+        return None
+    result = db.session.execute(
+        select(Student).where(func.lower(Student.ku_id) == sId.lower())
+    ).scalar_one_or_none()
     return result
 
 if __name__ == '__main__':
