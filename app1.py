@@ -101,16 +101,31 @@ def index():
                     if e.course.course_code == pred_course.course_code:
                         b=True
                 if not b: 
+                    stud = lookup_sid(sID)
                     pseudo_pred = PseudoCourse(pred_course.course_name, None, pred_course)
-                    pred_grade = predict.predict_grade(pseudo_pred.course)
-                    pseudo_pred.cGrade = pred_grade
+                    predict.get_dist(pseudo_pred.course)
+                    predict.predict_grade(pseudo_pred, pseudo_courses)
                     pred_courses.append(pseudo_pred)
-        
-            
+                    
+                    req = make_prediction_req()
+                    if req:
+                        # add prediction request to database
+                        db.session.add(req)
+                        db.session.commit()
 
         return redirect(url_for('index'))  # reload page
 
     return render_template("index.html", pseudo_courses=pseudo_courses, pred_courses=pred_courses)
+
+
+def make_prediction_req():
+    # request can only be made if there are courses to predict on
+    # and courses to predict for
+    if pseudo_courses and pred_courses:
+        sID = session.get('ku_id')
+        stud = lookup_sid(sID)
+        return PredictionRequest(student_id=sID, student=stud)   
+    else: return None
 
 class PseudoCourse:
     def __init__(self, cName, cGrade, course: models.Course):
