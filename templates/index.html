@@ -8,65 +8,64 @@
 
 
 {% block body %}
+<div class="page-title">
+  <h1>Predict your grades</h1>
+</div>
 
-<div class="pseudo_body">
-    <h1>Predict your grades</h1>
+<div id="clear">
+  <form method="POST">
+    <input type="hidden" name="form_type" value="clear">
+    <button type="submit" class="secondary">Clear all data</button>
+  </form>
+</div>
 
-    <div  class="divtab">
-        <div class="divtab-cell">
-        <hr>
-        <h3>Insert your finished courses</h3>
-        <form method="POST">
-            <input type="hidden" name="form_type" value="finished">
+<div class="grid">
+  <div class="card">
+    <h3>Insert your finished courses</h3>
+    <form method="POST">
+      <input type="hidden" name="form_type" value="finished">
+      <div class="form-row">
+        <input type="text" name="courseId" placeholder="Course ID">
+        <input type="text" name="courseGrade" placeholder="Grade">
+        <button type="submit">Add</button>
+      </div>
+    </form>
 
-            <input type="text" name="courseId" placeholder="Course ID">
-            <input type="text" name="courseGrade" placeholder="Grade">
-            <button type="submit">Add</button>
-        </form>
+    {% if pseudo_completed %}
+      <h3 class="small">Submitted courses</h3>
+      {% for p in pseudo_completed %}
+        <div class="list-item"><div><b>{{ p.course_name }}</b> — {{ p.grade }}</div></div>
+      {% endfor %}
+    {% endif %}
+  </div>
 
-        <hr>
+  <div class="card">
+    <h3>Insert courses to predict on</h3>
+    <form method="POST">
+      <input type="hidden" name="form_type" value="predict">
+      <div class="form-row">
+        <input type="text" name="courseId" placeholder="Course ID">
+        <button type="submit">Add</button>
+      </div>
+    </form>
 
-        {% if pseudo_courses %}
-            <h3>Submitted courses:</h3>
-            {% for p in pseudo_courses %}
-            <p class="added_courses"> <b>{{ p.cName }}</b>: {{ p.cGrade }}</p>
-            {% endfor %}
-        {% endif %}
-    </div>
+    {% if pred_courses %}
+      <h3 class="small">Added courses</h3>
+      {% for p in pred_courses %}
+        <div class="list-item"><div><b>{{ p.course_name }}</b></div></div>
+      {% endfor %}
+    {% endif %}
+  </div>
 
-    <div class="divtab-cell">
-        <hr>
-        <h3>Insert courses to predict on</h3>
-        <form method="POST">
-             <input type="hidden" name="form_type" value="predict">
-
-            <input type="text" name="courseId" placeholder="Course ID">
-            <button type="submit">Add</button>
-        </form>
-
-        <hr>
-
-        {% if pred_courses %}
-            <h3>Added courses:</h3>
-            {% for p in pred_courses %}
-            <p class="added_courses"> <b>{{ p.cName }}</b></p>
-            {% endfor %}
-        {% endif %}
-    </div>
-
-
-    <div class="divtab-cell">
-        <hr>
-        <h3>Predictions</h3>
-        <hr>
-
-        {% if pred_courses %}
-            {% for p in pred_courses %}
-            <p class="added_courses"> In <b>{{ p.cName }}</b> you will get: <b> {{ p.cGrade }} </b></p>
-            {% endfor %}
-        {% endif %}
-    </div>
-
-    </div>
+  <div class="card">
+    <h3>Predictions</h3>
+    {% if pred_courses %}
+      {% for p in pred_courses %}
+        <div class="list-item">In <b>{{ p.course_name }}</b> you will get: <b>{{ p.grade }}</b></div>
+      {% endfor %}
+    {% else %}
+      <p class="small">No predictions yet</p>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

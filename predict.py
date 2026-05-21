@@ -1,55 +1,96 @@
 import numpy as np
-from sqlalchemy import select, text
-import scipy.stats as ss
-from app1 import PseudoCourse, db, app
-from models import Course, GradeDistribution, Completed
+from sqlalchemy import select
+from app1 import PseudoCourse, db, app, lookup_sid
+from models import GradeDistribution, Prediction, PredictionRequest
 
-#Percentile matching
 
-f_grade_percentiles = []
-grade_values = [-3, 0, 2, 4, 7, 10, 12]
+GRADE_VALUES = [-3, 0, 2, 4, 7, 10, 12]
 
-def sql_get_dist(c: Course, year=2023):
-    return text(f"SELECT TABLE grade_distribution d WHERE d.course_code ={c.course_code} AND d.year = {year}")
+def make_prediction_req(sid, pred_course, completed):
+    # request can only be made if there are courses to predict on
+    # and courses to predict for
+    if completed and pred_course:
+        stud = lookup_sid(sid)
+        return PredictionRequest(student_id=sid, student=stud)
+    else: return None
 
-def get_dist(c: Course):
-    cds = []
-    cds.append(db.session.execute(sql_get_dist(c)))
-    c.distributions = cds
+def get_dist(course_code, year=2023):
+    return (
+        db.session.execute(
+            select(GradeDistribution).where(
+                GradeDistribution.course_code == course_code,
+                GradeDistribution.year == year
+            )
+        )
+        .scalars()
+        .all()
+    )
 
-def zipper2(p:PseudoCourse):
-    cds = p.course.distributions
-    grades = np.array([d.grade_value for d in cds])
-    idx = np.argsort(grades)
-    count = np.array([d.count for d in cds])[idx]
-    return zip(grades, count)
 
-def predict_grade(p: PseudoCourse, completed: list[PseudoCourse]):
-    cdf_pred = get_cdf(zipper2(p))
+def course_stats(distribution_rows):
+    rows = sorted(distribution_rows, key=lambda r: r.grade_value)
 
-    for comp in completed: get_dist(comp.course)
+    grades = np.array([r.grade_value for r in rows], dtype=float)
+    counts = np.array([r.count for r in rows], dtype=float)
 
-    completed_cdfs = [get_cdf(zipper2(comp)) for comp in completed]
-    avg_percentile = np.mean([percentileFromGrade(c, p.cGrade) for c in completed_cdfs for p in completed])
+    total = counts.sum()
+    if total == 0:
+        return 0.0, 1.0
 
-    prediction = gradeFromPercentile(avg_percentile)
-    p.cGrade = prediction
+    mu = np.average(grades, weights=counts)
+    variance = np.average((grades - mu) ** 2, weights=counts)
+    sigma = float(np.sqrt(variance))
 
-def get_cdf(fDistribution):
-    total_students = sum([e[1] for e in fDistribution])
-    arr = np.array([e[1]/total_students for e in fDistribution])
-    cumulative = 0
-    r = []
-    for i in range(len(grade_values)):
-        cumulative += arr[i]
-        r.append(grade_values[i],arr[i],cumulative)
-    return r
+    if sigma == 0:
+        sigma = 1.0
 
-def percentileFromGrade(cdf: list, grade: int):
-    return [e for e in cdf if e==grade]
+    return float(mu), sigma
 
-def gradeFromPercentile(avgPct, pCourses):
-    # find percentile matching grade for pCourses
+
+def to_zscore(grade, mu, sigma):
+    return (float(grade) - mu) / sigma
+
+
+def from_zscore(z, mu, sigma):
+    return mu + z * sigma
+
+
+def nearest_legal_grade(x):
+    return min(GRADE_VALUES, key=lambda g: abs(g - x))
+
+
+def predict_grade(pred_course, completed, sid):
+    req = make_prediction_req(sid, pred_course, completed)
+    if req:
+    # add prediction request to database
+        db.session.add(req)
+        db.session.commit()  
     
+    z_scores = []
 
- 
+    for comp in completed:
+        rows = get_dist(comp.course_code)
+        mu, sigma = course_stats(rows)
+        z_scores.append(to_zscore(comp.grade, mu, sigma))
+
+    if not z_scores:
+        raise ValueError("No completed courses to base prediction on")
+
+    avg_z = float(np.mean(z_scores))
+
+    target_rows = get_dist(pred_course.course_code)
+    target_mu, target_sigma = course_stats(target_rows)
+
+    raw_prediction = from_zscore(avg_z, target_mu, target_sigma)
+    pred_course.grade = nearest_legal_grade(raw_prediction)
+
+    pred = Prediction(
+                      request_id=req.request_id,
+                      course_code=pred_course.course_code,
+                      predicted_grade=pred_course.grade,
+                      z_score=avg_z
+                    )
+    db.session.add(pred)
+    db.session.commit()
+
+    return pred_course.grade

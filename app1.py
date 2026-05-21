@@ -1,11 +1,10 @@
 from flask import Flask, request, render_template, redirect, url_for, session
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import select, func, insert
+from models import Student, Course, Completed, Prediction, PredictionRequest
+from sqlalchemy import select, func, delete, and_
 from flask_migrate import Migrate
-import re
-import models
+from dataclasses import dataclass
 import predict
-from models import Student, Course, Completed, PredictionRequest, Prediction, GradeDistribution
+import re
 
 
 cCodeRegExp = re.compile(r'[NL][A-Z]{3}\d{5}U\s*$', re.IGNORECASE)
@@ -15,7 +14,7 @@ gradesRegExp = re.compile(r'[0]*[-][0]*[3]\s*$' \
 
 kuIDRegExp = re.compile(r'[a-z]{3}[0-9]{3}', re.IGNORECASE)
 
-pseudo_courses = []
+pseudo_completed = []
 pred_courses = []
 
 app = Flask(__name__)
@@ -40,7 +39,8 @@ def login():
             existing = lookup_sid(ku_id)
             if existing:
                 #if it exists retrieve finished courses from db
-                pseudo_courses.extend(completed2pseudo(existing.completions))
+                add_completed(existing)
+                add_predictions(existing)
             else:
                 s = Student(ku_id=ku_id, major=None)
                 db.session.add(s)
@@ -63,18 +63,25 @@ def index():
             courseId = request.form["courseId"]
             courseGrade = request.form["courseGrade"]
             if not gradesRegExp.match(courseGrade): courseId="invalid"
+            else: courseGrade=int(courseGrade)
 
             course = lookup_cid(courseId)
             if course: 
                 sID = session.get('ku_id')
                 stud = lookup_sid(sID)
-                pseudo = PseudoCourse(course.course_name, courseGrade, course)
-                completed_course = Completed(ku_id=sID,
-                                   course_code=course.course_code,
-                                   year=2025,
-                                   grade=courseGrade,
-                                   student=stud,
-                                   course=course)
+
+                pseudo = PseudoCourse(course_name=course.course_name,
+                                       course_code=course.course_code,
+                                        grade=courseGrade)
+                
+                completed_course = Completed(
+                                        ku_id=sID,
+                                        course_code=course.course_code,
+                                        year=2025,
+                                        grade=courseGrade,
+                                        student=stud,
+                                        course=course
+                                    )
                 stud.completions.append(completed_course)
                 db.session.add(completed_course)
                 db.session.commit()
@@ -82,13 +89,13 @@ def index():
 
             if pseudo:
                 b = False
-                for e in pseudo_courses:
-                    if e.course.course_code == pseudo.course.course_code:
-                        pseudo_courses.remove(e) #if already finished, it can be overwritten
+                for e in pseudo_completed:
+                    if e.course_code == pseudo.course_code:
+                        pseudo_completed.remove(e) #if already finished, it can be overwritten
                 for e in pred_courses: 
-                    if e.course.course_code == pseudo.course.course_code:
+                    if e.course_code == pseudo.course_code:
                         b=True
-                if not b: pseudo_courses.append(pseudo)
+                if not b: pseudo_completed.append(pseudo)
 
 
         elif form_type == "predict":
@@ -97,52 +104,40 @@ def index():
             pred_course = lookup_cid(courseId)
             if pred_course:
                 b = False
-                for e in pseudo_courses:
-                    if e.course.course_code == pred_course.course_code:
+                for e in pseudo_completed:
+                    if e.course_code == pred_course.course_code:
                         b=True
                 if not b: 
-                    stud = lookup_sid(sID)
-                    pseudo_pred = PseudoCourse(pred_course.course_name, None, pred_course)
-                    predict.get_dist(pseudo_pred.course)
-                    predict.predict_grade(pseudo_pred, pseudo_courses)
-                    pred_courses.append(pseudo_pred)
+                    sid = session.get('ku_id')
+                    stud = lookup_sid(sid)
+
+                    pseudo_pred = PseudoCourse(course_name=pred_course.course_name,
+                                                course_code=pred_course.course_code,
+                                                grade=None)
                     
-                    req = make_prediction_req()
-                    if req:
-                        # add prediction request to database
-                        db.session.add(req)
-                        db.session.commit()
+                    predict.predict_grade(pseudo_pred, pseudo_completed, sid)
+                    pred_courses.append(pseudo_pred)
+
+        elif form_type == "clear":
+            clear_data(lookup_sid(session.get('ku_id')))
+            pred_courses.clear()
+            pseudo_completed.clear()
 
         return redirect(url_for('index'))  # reload page
 
-    return render_template("index.html", pseudo_courses=pseudo_courses, pred_courses=pred_courses)
+    return render_template("index.html",
+                           pseudo_completed=pseudo_completed,
+                           pred_courses=pred_courses)
 
 
-def make_prediction_req():
-    # request can only be made if there are courses to predict on
-    # and courses to predict for
-    if pseudo_courses and pred_courses:
-        sID = session.get('ku_id')
-        stud = lookup_sid(sID)
-        return PredictionRequest(student_id=sID, student=stud)   
-    else: return None
 
+
+@dataclass
 class PseudoCourse:
-    def __init__(self, cName, cGrade, course: models.Course):
-        self.cName = cName 
-        self.cGrade = cGrade 
-        self.course = course
+    course_code: str
+    course_name: str
+    grade: int | None = None
 
-    def __str__(self):
-        return f"{self.cName}: {self.cGrade}"
-    
-def completed2pseudo(cs: list[Completed]):
-    res = []
-    for e in cs:
-        res.append(PseudoCourse(e.course.course_name,
-                                e.grade,
-                                e.course))
-    return res
 
 def lookup_cid(cId):
     if cId is None:
@@ -166,6 +161,68 @@ def lookup_sid(sId):
         select(Student).where(func.lower(Student.ku_id) == sId.lower())
     ).scalar_one_or_none()
     return result
+
+    
+def add_completed(student: Student):
+    l = student.completions
+    for e in l:
+        pseudo_completed.append(PseudoCourse(course_name=e.course.course_name,
+                                course_code=e.course.course_code,
+                                grade=e.grade
+                                ))
+        
+def add_predictions(student: Student):
+    sid = student.ku_id
+
+    stmt = (
+        select(
+            Prediction.predicted_grade,
+            Prediction.course_code
+        )
+        .select_from(PredictionRequest)
+        .join(Prediction, Prediction.request_id == PredictionRequest.request_id)
+        .where(PredictionRequest.student_id == sid)
+    )
+
+    rows = db.session.execute(stmt).all()
+
+    for predicted_grade, course_code in rows:
+        course = lookup_cid(course_code)
+        course_name = course.course_name if course is not None else course_code
+
+        pred_courses.append(
+            PseudoCourse(
+                course_code=course_code,
+                course_name=course_name,
+                grade=predicted_grade
+            )
+        )
+
+def clear_data(student: Student):
+    sid = student.ku_id
+    db.session.execute(
+        delete(Prediction).where(
+            Prediction.request_id.in_(
+                select(PredictionRequest.request_id)
+                .where(PredictionRequest.student_id == sid)
+            )
+        )
+    )
+
+    db.session.execute(
+        delete(PredictionRequest).where(
+            PredictionRequest.student_id == sid
+        )
+    )
+
+    db.session.execute(
+        delete(Completed).where(
+            Completed.ku_id == sid
+        )
+    )
+
+    db.session.commit()
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,43 +1,105 @@
 :root {
-    --transbg: rgb(32, 32, 32);
+  --bg: #f6f7fb;
+  --panel: #fff9e6;
+  --accent: #2b6cb0;
+  --muted: #6b7280;
+  --card-border: rgba(0,0,0,0.06);
+  --shadow: 0 6px 18px rgba(11, 15, 30, 0.08);
+  --radius: 12px;
+  --transbg: #202020;
 }
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: linear-gradient(180deg, var(--bg), #eef2f7); color: #0b1220; }
 
 nav {
-    color: white;
-    text-decoration: none;
+  background: linear-gradient(90deg, rgba(43,108,176,0.95), rgba(59,130,246,0.95));
+  color: white;
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(11,15,30,0.08);
+}
+nav a { color: white; text-decoration: none; font-weight: 600; letter-spacing: 0.2px; }
+nav .brand { font-weight: 700; font-family: "Courier New", monospace; }
+
+.container {
+  max-width: 1100px;
+  margin: 2.2rem auto;
+  padding: 1.6rem;
 }
 
-h1 {
-    font-family:monospace;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  align-items: start;
 }
 
-body {
-    display: flex;
-    justify-content: center;
-    margin: auto;
-    font-family: sans-serif;
-    color: black;
-    background-color: var(--transbg);
+.card {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--card-border);
+  min-height: 160px;
+}
+.card h3 { margin: 0 0 0.6rem 0; font-size: 1.05rem; color: #0b1220; font-family: "Courier New", monospace; }
+
+.form-row { display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; margin-bottom:0.6rem; }
+input[type="text"] {
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid rgba(11,15,30,0.08);
+  background: white;
+  min-width: 160px;
+  font-size: 0.95rem;
+}
+button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform .08s ease, box-shadow .12s ease;
+}
+button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(43,108,176,0.12); }
+button.secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid rgba(43,108,176,0.12);
 }
 
-.pseudo_body {
-    background-color: rgb(254, 249, 186);
+.list-item {
+  background: rgba(0,0,0,0.02);
+  padding: 0.6rem;
+  
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:0.6rem;
 }
+.list-item b { color: #0b1220; }
 
-.divtab {
-    display: flex;
-    justify-content: center;
-    font-family:monospace;
+#clear { display:flex; justify-content:flex-end; margin-bottom: 1rem; }
+
+.page-title {
+  display:flex;
+  align-items:center;
+  gap:0.8rem;
+  margin-bottom: 1rem;
 }
+.page-title h1 { margin:0; font-size:1.4rem; font-family: "Courier New", monospace; color:#0b1220; }
 
-.divtab-cell {
-    padding: 4em;
-    border-style: solid;
-    border-color: var(--transbg);
-    border-width: 0.5em;
-}
+.small { color: var(--muted); font-size:0.9rem; }
 
-.added_courses {
-    border: 0.1em dotted black;
-    padding: 0.5em;
+@media (max-width:640px) {
+  .form-row { flex-direction: column; align-items: stretch; }
+  input[type="text"] { width:100%; }
+  #clear { justify-content:center; margin-bottom: 0.6rem; }
 }
