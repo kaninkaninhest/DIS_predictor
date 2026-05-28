@@ -57,3 +57,7 @@ Optional environment variables:
 
   ### 1.5) Run the app
     python app1.py
+
+## 2) ER-diagram and AI-declaration
+  - The ERD can be found as a png named "predictor_er_diagram.png".
+  - AI-declaration can be found as txt file named "AI_declaration.txt".
