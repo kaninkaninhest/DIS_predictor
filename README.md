@@ -58,6 +58,15 @@ Optional environment variables:
   ### 1.5) Run the app
     python app1.py
 
-## 2) ER-diagram and AI-declaration
+## 2) How to interact with the grade predictor
+Users start on a login page where they are prompted to enter their KU-ID. After submission, they are redirected to the main Grade Predictor page.
+
+On the main page, the workflow is structured in two steps. First, the user must enter their completed courses along with the corresponding grades. This step is required before any predictions can be made. Once completed courses have been added, the user can proceed to the right-hand column, where they can enter courses they want grade predictions for.
+
+Courses can be identified using either the full course name or the course code in both columns.
+
+If the user wants to reset their session and remove all stored data associated with their KU-ID, they can use the “clear” button located in the top-right corner of the page.
+
+## 3) ER-diagram and AI-declaration
   - The ERD can be found as a png named "predictor_er_diagram.png".
   - AI-declaration can be found as txt file named "AI_declaration.txt".
