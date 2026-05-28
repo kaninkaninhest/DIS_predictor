@@ -1,7 +1,7 @@
-Grade predictor, based on prior courses
+# Grade predictor
 
-    DIS PROJECT 2026
-    DIKU
+### DIS PROJECT 2026
+### DIKU
     Marcus Fennestad (mpw603),
     Jacob Daniel Taarnberg (pkz685) 
     & Rasmus Appelby Kallehave(zwt566)
@@ -16,13 +16,12 @@ Grade predictor, based on prior courses
 
 ## 1) Setup
 
-  # 1.1)Create database
-(in terminal)
+  ### 1.1)Create database
 
     createdb coursegrades_api
     psql -U postgres -d coursegrades_api -f coursegrades_dump.sql
 
-  # 1.2)Create and activate a virtual environment
+  ### 1.2)Create and activate a virtual environment
 
     python -m venv .venv
 
@@ -33,8 +32,8 @@ Grade predictor, based on prior courses
     python -m pip install --upgrade pip
     python -m pip install -r requirements.txt
 
-  # 1.3) Run the app
+  ### 1.3) Run the app
     python app1.py
 
-  # 1.4) Verify installed packages have compatible dependencies
+  ### 1.4) Verify installed packages have compatible dependencies
     python -m pip check
