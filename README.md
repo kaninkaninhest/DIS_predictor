@@ -19,22 +19,22 @@ Grade predictor, based on prior courses
   # 1.1)Create database
 (in terminal)
 
-  createdb coursegrades_api
-  psql -U postgres -d coursegrades_api -f coursegrades_dump.sql
+    createdb coursegrades_api
+    psql -U postgres -d coursegrades_api -f coursegrades_dump.sql
 
   # 1.2)Create and activate a virtual environment
 
     python -m venv .venv
 
-  .venv/bin/activate        #Mac/Linux
+    .venv/bin/activate        #Mac/Linux
  
-  .venv\Scripts\activate    #Windows
+    .venv\Scripts\activate    #Windows
 
-  python -m pip install --upgrade pip
-  python -m pip install -r requirements.txt
+    python -m pip install --upgrade pip
+    python -m pip install -r requirements.txt
 
   # 1.3) Run the app
-  python app1.py
+    python app1.py
 
   # 1.4) Verify installed packages have compatible dependencies
-  python -m pip check
+    python -m pip check
