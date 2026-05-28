@@ -1,6 +1,6 @@
 import numpy as np
 from sqlalchemy import select
-from app1 import PseudoCourse, db, app, lookup_sid
+from extensions import db
 from models import GradeDistribution, Prediction, PredictionRequest
 
 
@@ -10,8 +10,7 @@ def make_prediction_req(sid, pred_course, completed):
     # request can only be made if there are courses to predict on
     # and courses to predict for
     if completed and pred_course:
-        stud = lookup_sid(sid)
-        return PredictionRequest(student_id=sid, student=stud)
+        return PredictionRequest(student_id=sid)
     else: return None
 
 def get_dist(course_code, year=2023):

@@ -10,7 +10,7 @@
 # Grade Predictor
 
 ## Requirements
-- Python 3.13 (other versions might also work but this is what we used)
+- Python 3.12 (other versions might also work but this is what we used)
 - PostgreSQL
 - A terminal / command prompt
 
@@ -18,12 +18,12 @@
 
   ### 1.1)Create database
 
-    createdb coursegrades_api
-    psql -U postgres -d coursegrades_api -f coursegrades_dump.sql
+    createdb -U CourseGrades_api
+    psql -U postgres -d CourseGrades_api -f coursegrades_dump.sql
 
   ### 1.2)Create and activate a virtual environment
 
-    python -m venv .venv
+    py -3.12 -m venv .venv
 
     .venv/bin/activate        #Mac/Linux
  
@@ -32,8 +32,23 @@
     python -m pip install --upgrade pip
     python -m pip install -r requirements.txt
 
-  ### 1.3) Run the app
-    python app1.py
+  ### 1.3) Configure PostgreSQL credentials
+Before running the application, set your PostgreSQL password as an environment variable.
+
+Windows (PowerShell)
+    $env:DB_PASSWORD="your_postgres_password"
+macOS / Linux
+    export DB_PASSWORD="your_postgres_password"
+
+Optional environment variables:
+
+    DB_USER (default: postgres)
+    DB_HOST (default: localhost)
+    DB_PORT (default: 5432)
+    DB_NAME (default: CourseGrades_api)
 
   ### 1.4) Verify installed packages have compatible dependencies
     python -m pip check
+
+  ### 1.5) Run the app
+    python app1.py

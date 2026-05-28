@@ -1,13 +1,9 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import ForeignKey, text
 import uuid
-from datetime import datetime
-
+from sqlalchemy import ForeignKey, text
+from extensions import db
 
 def generate_id():
     return str(uuid.uuid4())[:6]
-
-db = SQLAlchemy() 
 
 
 class Course(db.Model):
