@@ -35,9 +35,14 @@
   ### 1.3) Configure PostgreSQL credentials
 Before running the application, set your PostgreSQL password as an environment variable.
 
+
 Windows (PowerShell)
+    
     $env:DB_PASSWORD="your_postgres_password"
+
+
 macOS / Linux
+    
     export DB_PASSWORD="your_postgres_password"
 
 Optional environment variables:
