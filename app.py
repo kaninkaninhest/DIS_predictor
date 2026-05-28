@@ -6,7 +6,8 @@ from routes import bp
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    app.secret_key = "123"
+    # Development-only secret key (safe for this school project)
+    app.secret_key = "123"  
     
     db.init_app(app)
     migrate.init_app(app, db)
