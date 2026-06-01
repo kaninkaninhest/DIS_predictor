@@ -68,4 +68,4 @@ If the user wants to reset their session and remove all stored data associated w
 
 ## 3) ER-diagram and AI-declaration
   - The ERD can be found as a png named "predictor_er_diagram.png".
-  - A simple AI declaration is included as `AI_declaration.txt`. An official AI declaration PDF is also uploaded alongside the submission.
+  - The official AI declaration is included as `AI-declaration-ENG-no-usage.pdf`. A short no-usage statement is also included in `AI_declaration.txt`.
