@@ -1,13 +1,10 @@
-# Grade predictor
+# Grade Predictor
 
 ### DIS PROJECT 2026
 ### DIKU
     Marcus Fennestad (mpw603),
     Jacob Daniel Taarnberg (pkz685) 
     & Rasmus Appelby Kallehave(zwt566)
-
-
-# Grade Predictor
 
 ## Requirements
 - Python 3.12 (other versions might also work but this is what we used)
@@ -16,12 +13,12 @@
 
 ## 1) Setup
 
-  ### 1.1)Create database
+  ### 1.1) Create database
 
-    createdb -U CourseGrades_api
+    createdb -U postgres CourseGrades_api
     psql -U postgres -d CourseGrades_api -f coursegrades_dump.sql
 
-  ### 1.2)Create and activate a virtual environment
+  ### 1.2) Create and activate a virtual environment
 
     py -3.12 -m venv .venv
 
@@ -56,17 +53,19 @@ Optional environment variables:
     python -m pip check
 
   ### 1.5) Run the app
-    python app1.py
+    python app.py
+
+    After starting the app, open the local development server in a browser. By default, this is http://127.0.0.1:5000
 
 ## 2) How to interact with the grade predictor
 Users start on a login page where they are prompted to enter their KU-ID. After submission, they are redirected to the main Grade Predictor page.
 
 On the main page, the workflow is structured in two steps. First, the user must enter their completed courses along with the corresponding grades. This step is required before any predictions can be made. Once completed courses have been added, the user can proceed to the right-hand column, where they can enter courses they want grade predictions for.
 
-Courses can be identified using either the full course name or the course code in both columns.
+Courses can be identified using either the full course name or the course code, as long as the course exists in the database.
 
 If the user wants to reset their session and remove all stored data associated with their KU-ID, they can use the “clear” button located in the top-right corner of the page.
 
 ## 3) ER-diagram and AI-declaration
   - The ERD can be found as a png named "predictor_er_diagram.png".
-  - AI-declaration can be found as txt file named "AI_declaration.txt".
+  - A simple AI declaration is included as `AI_declaration.txt`. An official AI declaration PDF is also uploaded alongside the submission.
