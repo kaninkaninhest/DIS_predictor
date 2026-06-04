@@ -4,10 +4,10 @@
 ### DIKU
     Marcus Fennestad (mpw603),
     Jacob Daniel Taarnberg (pkz685) 
-    & Rasmus Appelby Kallehave(zwt566)
+    & Rasmus Appelby Kallehave (zwt566)
 
 ## Requirements
-- Python 3.12 (other versions might also work but this is what we used)
+- Python 3.12 (other versions might also work but this is the one we have used)
 - PostgreSQL
 - A terminal / command prompt
 
@@ -58,9 +58,9 @@ Optional environment variables:
     After starting the app, open the local development server in a browser. By default, this is http://127.0.0.1:5000
 
 ## 2) How to interact with the grade predictor
-Users start on a login page where they are prompted to enter their KU-ID. After submission, they are redirected to the main Grade Predictor page.
+The application starts on a login page where the users are prompted to enter their KU-ID. After logging in, they are redirected to the main Grade Predictor page.
 
-On the main page, the workflow is structured in two steps. First, the user must enter their completed courses along with the corresponding grades. This step is required before any predictions can be made. Once completed courses have been added, the user can proceed to the right-hand column, where they can enter courses they want grade predictions for.
+On the main page, the workflow is structured in two steps. First, the user must enter their completed courses along with the corresponding grades. This step is required before any predictions can be made. Once completed and the courses have been added, the user can proceed to the right-hand column, where they can enter courses they want grade predictions for.
 
 Courses can be identified using either the full course name or the course code, as long as the course exists in the database.
 
